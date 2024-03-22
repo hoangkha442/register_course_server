@@ -27,5 +27,5 @@ export class AuthController {
   @Post('signup')
   signup(@Body() bodySignup: bodySignup){
     return this.authService.signup(bodySignup)
-  } 
+  }
 }

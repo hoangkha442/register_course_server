@@ -33,6 +33,14 @@ export class CategoryService {
     return data;
   }
 
+  findOne (id: number) {
+    let data = this.prisma.product_categories.findUnique({
+      where: {
+        category_id: id * 1
+      }
+    })
+    return data;
+  }
 
   // CẬP NHẬT SẢN PHẨM
   async update(id: number, updateCategoryDto: UpdateCategoryDto, req: RequestWithUser) {
@@ -64,6 +72,6 @@ export class CategoryService {
     await this.prisma.product_categories.delete({
       where: { category_id: id }
     });
-    return `Đã xóa sản phẩm thành công.`;
+    return `Đã xóa danh mục sản phẩm thành công!`;
   }
 }

@@ -19,7 +19,6 @@ export class SupplierController {
   }
 
   // LẤY DANH SÁCH NHÀ CUNG CẤP
-
   @Get()
   findAll(@Req() req: RequestWithUser) {
     return this.supplierService.findAll(req);

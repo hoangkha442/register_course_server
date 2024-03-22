@@ -66,13 +66,12 @@ export class SupplierService {
       where: { user_id: requestingUserID },
       select: { role: true }
     });
-  
     if (!requestingUser || requestingUser.role !== 'admin') {
       throw new HttpException("Bạn không có quyền truy cập!", HttpStatus.FORBIDDEN);
     }
     await this.prisma.suppliers.update({
       where:{
-        supplier_id: id
+        supplier_id: id * 1
       },
       data: updateSupplierDto
     })

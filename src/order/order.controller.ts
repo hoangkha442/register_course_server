@@ -20,15 +20,7 @@ export class OrderController {
   async createOrder(@Body() orderData: CreateOrderDto, @Req() req: RequestWithUser): Promise<any> {
     return this.orderService.createOrderAndDetails(orderData, req);
   }
-  // @Post()
-  // @HttpCode(HttpStatus.CREATED)
-  // @ApiResponse({ status: HttpStatus.CREATED, description: 'Order created successfully.' })
-  // @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad Request.' })
-  // async createOrder(@Body() orderData: CreateOrderDto, @Req() req: RequestWithUser): Promise<any> {
-  //   const userId = req.user.data.userID;
-  //   return this.orderService.createOrderAndDetails(orderData, userId);
-  // }
-
+ 
   @Get('/pagination')
   @ApiQuery({ name: 'page', type: Number, required: true, description: 'Page number for pagination' })
   @ApiQuery({ name: 'pageSize', type: Number, required: true, description: 'Number of items per page' })

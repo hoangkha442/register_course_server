@@ -27,6 +27,14 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard("jwt"))
+  @Get(':id')
+  findOne(@Param('id') id: number) {
+    return this.categoryService.findOne(id);
+  }
+
   // CẬP NHẬT DANH MỤC SẢN PHẨM
   @ApiBearerAuth()
   @UseGuards(AuthGuard("jwt"))
@@ -34,6 +42,7 @@ export class CategoryController {
   update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto, @Req() req: RequestWithUser) {
     return this.categoryService.update(+id, updateCategoryDto, req);
   }
+  
 
 
   // XÓA DANH MỤC SẢN PHẨM
