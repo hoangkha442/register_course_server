@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable, Param, Req } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { PrismaClient, users } from '@prisma/client';
+import { Prisma, PrismaClient, users } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import {updateUserDto, updateUserRole } from './dto/update-user.dto';
+import {UpdateUserDto, updateUserRole } from './dto/update-user.dto';
 import { RequestWithUser } from './interfaces';
 
 @Injectable()
@@ -15,13 +15,13 @@ export class UserService {
       where: { user_id: userId },
       select: { role: true },
     });
-    if (!user || user.role !== 'admin') {
+    if (!user || user.role !== 'quanTriVien') {
       throw new HttpException("Bạn không có quyền truy cập!", HttpStatus.FORBIDDEN);
     }
   }
 
 
-  // PHÂN TRANG
+//   // PHÂN TRANG
   async pagination(page: number, pageSize: number, userId: number): Promise<{ data: users[], totalPage: number }> {
 
     await this.checkAdminRole(userId);
@@ -38,20 +38,30 @@ export class UserService {
   }
   
 
-  // TẠO MỚI USER
-  async create(createUserDto: CreateUserDto, userId: number) {
-    await this.checkAdminRole(userId);
-    const emailExists = await this.prisma.users.findUnique({
-      where: { email: createUserDto.email }
-    });
-    if (emailExists) {
-      throw new HttpException('Email đã tồn tại!', HttpStatus.BAD_REQUEST);
-    }
-    createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
-    return this.prisma.users.create({
-      data: createUserDto
-    });
-  }  
+//   // TẠO MỚI USER
+async create(createUserDto: CreateUserDto, userId: number) {
+  await this.checkAdminRole(userId);
+
+  const emailExists = await this.prisma.users.findUnique({
+    where: { email: createUserDto.email },
+  });
+
+  if (emailExists) {
+    throw new HttpException('Email đã tồn tại!', HttpStatus.BAD_REQUEST);
+  }
+
+  createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
+
+  const data: any = {
+    ...createUserDto,
+    picture: createUserDto.picture || null, 
+  };
+
+  return this.prisma.users.create({
+    data,
+  });
+}
+
 
   // LẤY DANH SÁCH NGƯỜI DÙNG
   async findAll(userId: number): Promise<users[]> {
@@ -60,7 +70,7 @@ export class UserService {
   }
 
 
-  // TÌM NGƯỜI DÙNG THÔNG QUA TÊN
+//   // TÌM NGƯỜI DÙNG THÔNG QUA TÊN
   async findName(uName: string, userId: number){
     await this.checkAdminRole(userId);
     let data = await this.prisma.users.findMany({
@@ -73,7 +83,17 @@ export class UserService {
     return data
   }
 
-  // XEM CHI TIẾT NGƯỜI DÙNG
+  async getUserById(userId: number): Promise<any> {
+    const user = await this.prisma.users.findUnique({
+        where: { user_id: userId }
+    });
+    if (!user) {
+        throw new Error('User not found');
+    }
+    return user;
+}
+
+//   // XEM CHI TIẾT NGƯỜI DÙNG
   async findOne(id: number) {
     const getUser = await this.prisma.users.findUnique({
       where:{
@@ -87,75 +107,93 @@ export class UserService {
     
   }
 
-  // CẬP NHẬT NGƯỜI DÙNG
-  async update(id: number, updateUserDto: updateUserDto) {
-
-    // Check if user exists
-    const userExists = await this.prisma.users.findUnique({
-      where: { user_id: id }
+//   // CẬP NHẬT NGƯỜI DÙNG
+  async update(userId: number, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.users.findUnique({
+      where: { user_id: userId },
     });
-    
-    if (!userExists) {
-      return `Không tìm thấy tài khoản!`;
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-    
-    // // Update password if provided
+
+    // Update password if provided
     if (updateUserDto.password) {
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      updateUserDto.password = hashedPassword;
     }
-    console.log('updateUserDto.password: ', updateUserDto.password);
 
-    // console.log('updateUserDto: ', updateUserDto);
-    // await this.prisma.users.update({
-    //   where: { user_id: id * 1},
-    //   data: updateUserDto
-    // });
-
-    await this.prisma.users.update({
-      where: { user_id: id * 1},
-      data: updateUserDto
+    // Prepare update data, exclude undefined fields
+    const updateData: any = {};
+    Object.keys(updateUserDto).forEach((key) => {
+      if (updateUserDto[key] !== undefined) {
+        updateData[key] = updateUserDto[key];
+      }
     });
-  
-    return 'Cập nhật thành công!';
+
+    // Execute update
+    await this.prisma.users.update({
+      where: { user_id: userId },
+      data: updateData,
+    });
+
+    return 'Cập nhật người dùng thành công.';
   }
 
-  // Update authorization by admin
-  async updateUserByAdmin(id: number, updateUserRole: updateUserRole, userId: number) {
-    await this.checkAdminRole(userId);
+  // Update profile
+  async updateProfile(userId: number, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.users.findUnique({
+      where: { user_id: userId },
+    });
 
-    if (updateUserRole.password) {
-      updateUserRole.password = await bcrypt.hash(updateUserRole.password, 10);
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    await this.prisma.users.update({
-      where: { user_id: id * 1 },
-      data: {
-        ...updateUserRole,
-      },
-    });
-    return "Cập nhật thông tin thành công!"
-}
-
-
-  // ẨN NGƯỜI DÙNG
-  async hidden(id: number, userId: number) {
-    await this.checkAdminRole(userId);
-    const userToBeHidden = await this.prisma.users.findUnique({
-      where: { user_id: id },
-      select: { is_visible: true }
-    });
-  
-    if (!userToBeHidden) {
-      throw new HttpException("Không tìm thấy người dùng!", HttpStatus.NOT_FOUND);
+    // Update password if provided
+    if (updateUserDto.password) {
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      updateUserDto.password = hashedPassword;
     }
-  
-    await this.prisma.users.update({
-      where: { user_id: id },
-      data: { is_visible: !userToBeHidden.is_visible }
+
+    // Prepare update data, exclude undefined fields
+    const updateData: any = {};
+    Object.keys(updateUserDto).forEach((key) => {
+      if (updateUserDto[key] !== undefined) {
+        updateData[key] = updateUserDto[key];
+      }
     });
-  
-    return userToBeHidden.is_visible ? 'Ẩn người dùng thành công!' : 'Hủy ẩn người dùng thành công!';
+
+    // Execute update
+    await this.prisma.users.update({
+      where: { user_id: userId },
+      data: updateData,
+    });
+    return 'Cập nhật người dùng thành công.';
+    
   }
+
+
+
+//   // ẨN NGƯỜI DÙNG
+//   async hidden(id: number, userId: number) {
+//     await this.checkAdminRole(userId);
+//     const userToBeHidden = await this.prisma.users.findUnique({
+//       where: { user_id: id },
+//       select: { is_visible: true }
+//     });
+  
+//     if (!userToBeHidden) {
+//       throw new HttpException("Không tìm thấy người dùng!", HttpStatus.NOT_FOUND);
+//     }
+  
+//     await this.prisma.users.update({
+//       where: { user_id: id },
+//       data: { is_visible: !userToBeHidden.is_visible }
+//     });
+  
+//     return userToBeHidden.is_visible ? 'Ẩn người dùng thành công!' : 'Hủy ẩn người dùng thành công!';
+//   }
 
   // XÓA NGƯỜI DÙNG => CHƯA XỬ LÝ FK CONSTRAIN
   async remove(id: number, requestingUserID: number){
@@ -171,7 +209,7 @@ export class UserService {
       select: { role: true }
     });
   
-    if (requestingUser?.role !== 'admin') {
+    if (requestingUser?.role !== 'quanTriVien') {
       throw new HttpException("Bạn không có quyền truy cập!", HttpStatus.FORBIDDEN);
     }
   
@@ -180,7 +218,7 @@ export class UserService {
       await this.prisma.users.delete({
         where: { user_id: id }
       });
-      return `User deleted successfully.`;
+      return `Xóa người dùng thành công.`;
     } catch (error) {
       if (error.code === 'P2025') { 
         throw new HttpException("Không tìm thấy người dùng cần xóa!", HttpStatus.NOT_FOUND);
@@ -188,25 +226,25 @@ export class UserService {
       throw error;
     }
   }
-  
-  // UPLOAD AVATAR
-  async uploadAvatar(file: Express.Multer.File, req: RequestWithUser){
-    const requestingUserID = req.user.data.userID;
-
-      // Check if the user exists
-      const userExists = await this.prisma.users.findUnique({
-        where: { user_id: requestingUserID }
-      });
-
-      if (!userExists) {
-        throw new HttpException('Không tìm thấy tài khoản', HttpStatus.NOT_FOUND);
-      }
-
-      // Update the user's avatar
-      await this.prisma.users.update({
-        where: { user_id: requestingUserID },
-        data: { avatar: file.filename }
-      });
-      return 'Thay đổi ảnh đại diện thành công!';
-  }
 }
+  
+//   // UPLOAD AVATAR
+//   async uploadAvatar(file: Express.Multer.File, req: RequestWithUser){
+//     const requestingUserID = req.user.data.userID;
+
+//       // Check if the user exists
+//       const userExists = await this.prisma.users.findUnique({
+//         where: { user_id: requestingUserID }
+//       });
+
+//       if (!userExists) {
+//         throw new HttpException('Không tìm thấy tài khoản', HttpStatus.NOT_FOUND);
+//       }
+
+//       // Update the user's avatar
+//       await this.prisma.users.update({
+//         where: { user_id: requestingUserID },
+//         data: { avatar: file.filename }
+//       });
+//       return 'Thay đổi ảnh đại diện thành công!';
+//   }

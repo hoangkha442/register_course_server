@@ -20,7 +20,7 @@ export class AuthService {
         if (!getUser) {
           throw new HttpException('Sai Email!', HttpStatus.BAD_REQUEST);
         }
-        //
+        console.log('bodyLogin.password, getUser.password: ', bodyLogin.password, getUser.password);
         const isPasswordMatching = await bcrypt.compare(bodyLogin.password, getUser.password);
         if (!isPasswordMatching) {
           throw new HttpException("Sai mật khẩu!", HttpStatus.BAD_REQUEST);
@@ -45,7 +45,7 @@ export class AuthService {
             const newUser = await this.prisma.users.create({
                 data: {
                     ...bodySignup,
-                    role: "customer",
+                    role: "hocVien",
                     password: newPassword
                 }
             })

@@ -1,55 +1,53 @@
-import { ApiProperty } from "@nestjs/swagger"
-import { users_role } from "@prisma/client"
-export enum UserRole {
-    Admin = 'admin',
-    Customer = 'customer',
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDateString, IsEmail, IsEnum, IsOptional, IsString, Length } from 'class-validator';
+import { users_role } from '@prisma/client';
+
+export class UpdateUserDto {
+  @ApiPropertyOptional({ example: 'example@gmail.com', description: 'The email address of the user' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @ApiPropertyOptional({ example: 'newpassword123', description: 'The new password for the user account' })
+  @Length(6, 100)
+  @IsOptional()
+  password?: string;
+
+  @ApiPropertyOptional({ example: 'John Doe', description: 'The full name of the user' })
+  @IsString()
+  @IsOptional()
+  full_name?: string;
+
+  @ApiPropertyOptional({
+    enum: users_role,
+    example: users_role.hocVien,
+    description: 'The role of the user',
+  })
+  @IsEnum(users_role)
+  @IsOptional()
+  role?: users_role;
+
+  @ApiPropertyOptional({ example: '123456789', description: 'The phone number of the user' })
+  @IsString()
+  @IsOptional()
+  @Length(7, 15)
+  phone_number?: string;
+  
+
+  @ApiPropertyOptional({ example: '123 Main St', description: 'The address of the user' })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiPropertyOptional({ example: 'path/to/image.jpg', description: 'The path to the new profile picture of the user' })
+  @IsString()
+  @IsOptional()
+  picture?: string;
 }
 
-export class updateUserDto {
-    @ApiProperty({ description: 'Email of the user', example: 'user@example.com' })
-    email?: string;
-
-    @ApiProperty({ description: 'Password of the user', example: 'Password123!' })
-    password?: string;
-
-    @ApiProperty({ description: 'Full name of the user', example: 'John Doe' })
-    full_name?: string;
-
-    @ApiProperty({ description: 'Phone number of the user', example: '+1234567890' })
-    phone?: string;
-
-    @ApiProperty({ description: 'Last login date of the user', example: '2024-01-20T15:30:00.000Z' })
-    last_login_date?: string;
-
-    @ApiProperty({ description: 'Users address', example: '123 Main St, Anytown' })
-    address?: string;
-
-    @ApiProperty({ description: 'Users age', example: 30 })
-    age?: number;
-
-    @ApiProperty({ description: 'Active status of the user', example: true })
-    isActive?: boolean;
-}
-
-export class updateUserWRoleDto {
-    @ApiProperty({ description: 'Email of the user', example: 'user@example.com' })
-    email?: string;
-
-    @ApiProperty({ description: 'Password of the user', example: 'Password123!' })
-    password?: string;
-
-    @ApiProperty({ description: 'Full name of the user', example: 'John Doe' })
-    full_name?: string;
-
-    @ApiProperty({ description: 'Phone number of the user', example: '+1234567890' })
-    phone?: string;
-
-    @ApiProperty({ description: 'Last login date of the user', example: '2024-01-20T15:30:00.000Z' })
-    last_login_date?: string;
-
-}
-
-export class updateUserRole extends updateUserDto {
-    @ApiProperty({ enum: users_role, enumName: 'users_role', description: 'Role of the user', example: users_role.customer })
+export class updateUserRole extends UpdateUserDto {
+    @ApiProperty({ enum: users_role, enumName: 'users_role', description: 'Role of the user', example: users_role.hocVien })
     role: users_role;
 }
+
+

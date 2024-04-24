@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.use(express.static("."))
-  const config = new DocumentBuilder().setTitle('ThietBiYTe').addBearerAuth().build();
+  const config = new DocumentBuilder().setTitle('Trung tâm bồi dưỡng văn hóa').addBearerAuth().build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/swagger', app, document);  
   await app.listen(8080);

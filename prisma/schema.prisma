@@ -7,155 +7,105 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model companies {
-  company_id    Int      @id @default(autoincrement())
-  company_name  String   @db.VarChar(100)
-  contact_name  String?  @db.VarChar(100)
-  contact_email String?  @db.VarChar(100)
-  address       String?  @db.VarChar(255)
-  phone         String?  @db.VarChar(15)
-  industry_type String?  @db.VarChar(50)
-  orders        orders[]
+model attendance {
+  attendance_id        Int                   @id @default(autoincrement())
+  registration_id      Int?
+  date                 DateTime              @db.Date
+  status               String                @db.VarChar(255)
+  course_registrations course_registrations? @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "attendance_ibfk_1")
+
+  @@index([registration_id], map: "registration_id")
 }
 
-model inventory {
-  inventory_id      Int       @id @default(autoincrement())
-  product_id        Int?
-  date_modified     DateTime  @default(now()) @db.DateTime(0)
-  quantity_change   Int
-  reason_for_change String?   @db.VarChar(255)
-  products          products? @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "inventory_ibfk_1")
+model classes {
+  class_id             Int                    @id @default(autoincrement())
+  class_name           String                 @db.VarChar(255)
+  subject_id           Int?
+  instructor_id        Int?
+  schedule             String                 @db.VarChar(255)
+  description          String?                @db.Text
+  registered_students  Int                    @default(0)
+  subjects             subjects?              @relation(fields: [subject_id], references: [subject_id], onDelete: Cascade, onUpdate: NoAction, map: "classes_ibfk_1")
+  users                users?                 @relation(fields: [instructor_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "classes_ibfk_2")
+  course_registrations course_registrations[]
 
-  @@index([product_id], map: "product_id")
+  @@index([instructor_id], map: "instructor_id")
+  @@index([subject_id], map: "subject_id")
 }
 
-model order_details {
-  order_detail_id Int       @id @default(autoincrement())
-  order_id        Int?
-  product_id      Int?
-  quantity        Int
-  price           Int
-  orders          orders?   @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "order_details_ibfk_1")
-  products        products? @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "order_details_ibfk_2")
+model course_registrations {
+  registration_id   Int          @id @default(autoincrement())
+  student_id        Int?
+  class_id          Int?
+  registration_date DateTime     @db.Date
+  study_status      String       @db.VarChar(255)
+  attendance        attendance[]
+  users             users?       @relation(fields: [student_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "course_registrations_ibfk_1")
+  classes           classes?     @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: NoAction, map: "course_registrations_ibfk_2")
+  payment           payment[]
 
-  @@index([order_id], map: "order_id")
-  @@index([product_id], map: "product_id")
+  @@index([class_id], map: "class_id")
+  @@index([student_id], map: "student_id")
 }
 
-model orders {
-  order_id         Int                @id @default(autoincrement())
-  user_id          Int
-  company_id       Int?
-  order_date       DateTime           @default(now()) @db.DateTime(0)
-  status           orders_status
-  total_amount     Int
-  order_details    order_details[]
-  users            users              @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
-  companies        companies?         @relation(fields: [company_id], references: [company_id], onUpdate: NoAction, map: "orders_ibfk_2")
-  payment_details  payment_details[]
-  shipping_details shipping_details[]
+model parent_student {
+  parent_id  Int
+  student_id Int
+  parents    parents @relation(fields: [parent_id], references: [parent_id], onDelete: Cascade, onUpdate: NoAction, map: "parent_student_ibfk_1")
+  users      users   @relation(fields: [student_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "parent_student_ibfk_2")
 
-  @@index([company_id], map: "company_id")
+  @@id([parent_id, student_id])
+  @@index([student_id], map: "student_id")
+}
+
+model parents {
+  parent_id      Int              @id @default(autoincrement())
+  user_id        Int?
+  email          String           @unique(map: "email") @db.VarChar(255)
+  password       String           @db.VarChar(255)
+  relationship   String           @db.VarChar(255)
+  parent_student parent_student[]
+  users          users?           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "parents_ibfk_1")
+
   @@index([user_id], map: "user_id")
 }
 
-model payment_details {
-  payment_id     Int      @id @default(autoincrement())
-  order_id       Int?
-  payment_date   DateTime @default(now()) @db.DateTime(0)
-  amount         Int
-  payment_method String   @db.VarChar(255)
-  payment_status String   @db.VarChar(255)
-  orders         orders?  @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction, map: "payment_details_ibfk_1")
+model payment {
+  payment_id           Int                   @id @default(autoincrement())
+  registration_id      Int?
+  amount               Decimal               @db.Decimal(10, 2)
+  payment_date         DateTime              @db.Date
+  note                 String?               @db.Text
+  course_registrations course_registrations? @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "payment_ibfk_1")
 
-  @@index([order_id], map: "order_id")
+  @@index([registration_id], map: "registration_id")
 }
 
-model product_categories {
-  category_id   Int        @id @default(autoincrement())
-  category_name String     @db.VarChar(100)
-  description   String?    @db.Text
-  products      products[]
-}
-
-model products {
-  product_id         Int                 @id @default(autoincrement())
-  product_name       String              @db.VarChar(100)
-  product_picture    String?             @db.VarChar(100)
-  description        String?             @db.Text
-  price              Int
-  quantity_in_stock  Int
-  category_id        Int?
-  supplier_id        Int?
-  is_visible         Boolean             @default(true)
-  hinh_anh           String?             @db.VarChar(255)
-  inventory          inventory[]
-  order_details      order_details[]
-  product_categories product_categories? @relation(fields: [category_id], references: [category_id], onUpdate: NoAction, map: "products_ibfk_1")
-  suppliers          suppliers?          @relation(fields: [supplier_id], references: [supplier_id], onUpdate: NoAction, map: "products_ibfk_2")
-  reviews            reviews[]
-
-  @@index([category_id], map: "category_id")
-  @@index([supplier_id], map: "supplier_id")
-}
-
-model reviews {
-  review_id   Int       @id @default(autoincrement())
-  product_id  Int?
-  user_id     Int?
-  rating      Int
-  comment     String?   @db.Text
-  review_date DateTime  @default(now()) @db.DateTime(0)
-  products    products? @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction, map: "reviews_ibfk_1")
-  users       users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "reviews_ibfk_2")
-
-  @@index([product_id], map: "product_id")
-  @@index([user_id], map: "user_id")
-}
-
-model shipping_details {
-  shipping_id             Int       @id @default(autoincrement())
-  order_id                Int?
-  shipping_address        String    @db.VarChar(255)
-  estimated_delivery_date DateTime? @db.DateTime(0)
-  actual_delivery_date    DateTime? @db.DateTime(0)
-  orders                  orders?   @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction, map: "shipping_details_ibfk_1")
-
-  @@index([order_id], map: "order_id")
-}
-
-model suppliers {
-  supplier_id   Int        @id @default(autoincrement())
-  supplier_name String     @db.VarChar(100)
-  contact_name  String?    @db.VarChar(100)
-  contact_email String?    @db.VarChar(100)
-  address       String?    @db.VarChar(255)
-  phone         String?    @db.VarChar(15)
-  products      products[]
+model subjects {
+  subject_id   Int       @id @default(autoincrement())
+  subject_name String    @db.VarChar(255)
+  description  String?   @db.Text
+  classes      classes[]
 }
 
 model users {
-  user_id         Int        @id @default(autoincrement())
-  password        String     @db.VarChar(255)
-  full_name       String     @db.VarChar(100)
-  email           String     @unique(map: "email") @db.VarChar(100)
-  phone           String?    @db.VarChar(15)
-  role            users_role
-  creation_date   DateTime   @default(now()) @db.DateTime(0)
-  last_login_date DateTime?  @db.DateTime(0)
-  avatar          String?    @db.VarChar(255)
-  is_visible      Boolean?   @default(true)
-  orders          orders[]
-  reviews         reviews[]
-}
-
-enum orders_status {
-  pending
-  shipped
-  delivered
+  user_id              Int                    @id @default(autoincrement())
+  email                String                 @unique(map: "email") @db.VarChar(255)
+  password             String                 @db.VarChar(255)
+  full_name            String                 @db.VarChar(255)
+  role                 users_role
+  phone_number         String?                @db.VarChar(15)
+  birth_date           DateTime?              @db.Date
+  address              String?                @db.Text
+  picture              String?                @db.VarChar(255)
+  classes              classes[]
+  course_registrations course_registrations[]
+  parent_student       parent_student[]
+  parents              parents[]
 }
 
 enum users_role {
-  admin
-  customer
+  hocVien
+  giaoVien
+  quanTriVien
 }

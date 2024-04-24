@@ -9,7 +9,5 @@ export class bodySignup  {
     full_name: string
     role: string
     @ApiProperty()
-    phone: string
-
-    last_login_date: string
+    phone_number: string
 }

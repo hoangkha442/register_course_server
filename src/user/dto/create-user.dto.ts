@@ -1,42 +1,38 @@
-// createUser.dto.ts
-import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
-
-export enum UserRole {
-  Admin = 'admin',
-  Customer = 'customer',
-}
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { users_role } from '@prisma/client';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'example@gmail.com', description: 'Email của người dùng' })
+  @ApiProperty({ example: 'example@gmail.com', description: 'Email of the user' })
   @IsNotEmpty()
   @IsString()
   email: string;
 
-  @ApiProperty({ example: 'password123', description: 'Mật khẩu của người dùng' })
+  @ApiProperty({ example: 'password123', description: 'Password of the user' })
   @IsNotEmpty()
   @IsString()
   password: string;
 
-  @ApiProperty({ example: 'John Doe', description: 'Họ và tên của người dùng' })
+  @ApiProperty({ example: 'John Doe', description: 'Full name of the user' })
   @IsNotEmpty()
   @IsString()
   full_name: string;
 
   @ApiProperty({
-    enum: UserRole,
-    enumName: 'UserRole',
-    example: UserRole.Customer,
-    description: 'Vai trò của người dùng (admin hoặc customer)',
+    enum: users_role,
+    example: users_role.hocVien,
+    description: 'Role of the user (hocVien, giaoVien, or quanTriVien)',
   })
-  @IsEnum(UserRole)
-  role: UserRole;
+  @IsEnum(users_role)
+  role: users_role;
 
-  @ApiProperty({ example: '123456789', description: 'Số điện thoại của người dùng' })
+  @ApiProperty({ example: '123456789', description: 'Phone number of the user' })
   @IsString()
-  phone: string;
+  @IsOptional()
+  phone_number?: string;
 
-  @ApiProperty({ example: '2022-01-20T12:00:00.000Z', description: 'Ngày đăng nhập gần nhất của người dùng' })
+  @ApiProperty({ example: 'path/to/image.jpg', description: 'Picture path of the user', required: false })
   @IsString()
-  last_login_date: string;
+  @IsOptional()
+  picture?: string;
 }
