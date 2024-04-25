@@ -25,6 +25,7 @@ model classes {
   schedule             String                 @db.VarChar(255)
   description          String?                @db.Text
   registered_students  Int                    @default(0)
+  price                Decimal                @default(0.00) @db.Decimal(10, 2)
   subjects             subjects?              @relation(fields: [subject_id], references: [subject_id], onDelete: Cascade, onUpdate: NoAction, map: "classes_ibfk_1")
   users                users?                 @relation(fields: [instructor_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "classes_ibfk_2")
   course_registrations course_registrations[]

@@ -92,7 +92,11 @@ export class ClassService {
     const skipCount = (page - 1) * pageSize;
     const classes = await this.prisma.classes.findMany({
       skip: skipCount,
-      take: pageSize
+      take: pageSize,
+      include: {
+        users: true,
+        subjects: true,
+      }
     });
 
     const totalUsers = await this.prisma.classes.count();
