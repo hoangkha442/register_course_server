@@ -72,14 +72,24 @@ model parents {
 }
 
 model payment {
-  payment_id           Int                   @id @default(autoincrement())
+  payment_id           Int                      @id @default(autoincrement())
   registration_id      Int?
-  amount               Decimal               @db.Decimal(10, 2)
-  payment_date         DateTime              @db.Date
-  note                 String?               @db.Text
-  course_registrations course_registrations? @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "payment_ibfk_1")
+  amount               Decimal                  @db.Decimal(10, 2)
+  payment_date         DateTime                 @db.Date
+  note                 String?                  @db.Text
+  transaction_type     payment_transaction_type @default(debit)
+  payment_method       String?                  @db.VarChar(50)
+  payment_status       payment_payment_status   @default(pending)
+  currency             String?                  @default("VND") @db.VarChar(3)
+  payment_processor    String?                  @db.VarChar(50)
+  user_id              Int?
+  receipt_number       String?                  @db.VarChar(255)
+  payer_details        String?                  @db.Text
+  users                users?                   @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_payment_user")
+  course_registrations course_registrations?    @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "payment_ibfk_1")
 
   @@index([registration_id], map: "registration_id")
+  @@index([user_id], map: "fk_payment_user")
 }
 
 model subjects {
@@ -103,10 +113,23 @@ model users {
   course_registrations course_registrations[]
   parent_student       parent_student[]
   parents              parents[]
+  payment              payment[]
 }
 
 enum users_role {
   hocVien
   giaoVien
   quanTriVien
+}
+
+enum payment_transaction_type {
+  debit
+  credit
+}
+
+enum payment_payment_status {
+  pending
+  completed
+  failed
+  refunded
 }
