@@ -15,22 +15,42 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   //  PAGINATION USER
+  // @ApiBearerAuth()
+  // @UseGuards(AuthGuard('jwt'))
+  // @Get('pagination')
+  // @ApiQuery({ name: 'page', type: Number, required: true, description: 'Page number for pagination' })
+  // @ApiQuery({ name: 'pageSize', type: Number, required: true, description: 'Number of items per page' })
+  // pagination(
+  //   @Query('page') page: string,
+  //   @Query('pageSize') pageSize: string,
+  //   @Req() req: RequestWithUser
+  // ) {
+  //   const userId = req.user.data.userID;
+  //   const pageNumber = parseInt(page, 10) || 1;
+  //   const sizePage = parseInt(pageSize, 10) || 10;
+  //   return this.userService.pagination(pageNumber, sizePage, userId);
+  // }
+    
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('pagination')
   @ApiQuery({ name: 'page', type: Number, required: true, description: 'Page number for pagination' })
   @ApiQuery({ name: 'pageSize', type: Number, required: true, description: 'Number of items per page' })
-  pagination(
+  @ApiQuery({ name: 'name', type: String, required: false, description: 'Filter by user name' })
+  @ApiQuery({ name: 'role', type: String, required: false, description: 'Filter by user role' })
+  paginationSearch(
     @Query('page') page: string,
     @Query('pageSize') pageSize: string,
+    @Query('name') name: string,
+    @Query('role') role: string,
     @Req() req: RequestWithUser
   ) {
     const userId = req.user.data.userID;
     const pageNumber = parseInt(page, 10) || 1;
-    const sizePage = parseInt(pageSize, 10) || 10;
-    return this.userService.pagination(pageNumber, sizePage, userId);
+    const pageSizeNumber = parseInt(pageSize, 10) || 10;
+    return this.userService.pagination(pageNumber, pageSizeNumber, userId, name, role);
   }
-    
+
   // CREATE USER
   @ApiBearerAuth()
   @UseGuards(AuthGuard("jwt"))

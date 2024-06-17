@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Req, UseGuards, Query } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RequestWithUser } from 'src/user/interfaces';
 
@@ -16,7 +16,6 @@ export class PaymentController {
   @Post()
   create(@Body() createPaymentDto: CreatePaymentDto, @Req() req: RequestWithUser) {
     const userId = req.user.data.userID;    
-    
     return this.paymentService.create(createPaymentDto, userId);
   }
 
@@ -34,7 +33,6 @@ export class PaymentController {
   @Put(':id')
   update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto, @Req() req: RequestWithUser) {
     const userId = req.user.data.userID;    
-    
     return this.paymentService.update(+id, updatePaymentDto, userId);
   }
 
@@ -42,7 +40,6 @@ export class PaymentController {
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: RequestWithUser) {
     const userId = req.user.data.userID;    
-    
     return this.paymentService.remove(+id, userId);
   }
 }

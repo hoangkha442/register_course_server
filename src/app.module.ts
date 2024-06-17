@@ -12,12 +12,13 @@ import { ClassModule } from './class/class.module';
 import { CourseRegistrationModule } from './course-registration/course-registration.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { PaymentModule } from './payment/payment.module';
+import { CartModule } from './cart/cart.module';
 
 
 @Module({
   imports: [AuthModule, UserModule, ConfigModule.forRoot({
     isGlobal: true,
-  }), SubjectModule, ClassModule, CourseRegistrationModule, AttendanceModule, PaymentModule],
+  }), SubjectModule, ClassModule, CourseRegistrationModule, AttendanceModule, PaymentModule, CartModule],
   controllers: [AppController],
   providers: [AppService, JwtStrategy, CloudinaryProvider],
 })

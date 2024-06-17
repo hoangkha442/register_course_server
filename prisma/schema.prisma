@@ -26,6 +26,8 @@ model classes {
   description          String?                @db.Text
   registered_students  Int                    @default(0)
   price                Decimal                @default(0.00) @db.Decimal(10, 2)
+  picture              String?                @db.VarChar(255)
+  cart                 cart[]
   subjects             subjects?              @relation(fields: [subject_id], references: [subject_id], onDelete: Cascade, onUpdate: NoAction, map: "classes_ibfk_1")
   users                users?                 @relation(fields: [instructor_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "classes_ibfk_2")
   course_registrations course_registrations[]
@@ -73,23 +75,32 @@ model parents {
 
 model payment {
   payment_id           Int                      @id @default(autoincrement())
+  TmnCode              String?                  @db.VarChar(255)
+  TransID              String?                  @db.VarChar(255)
+  Status               Int?
+  OrderID              BigInt?
+  Currency             String?                  @db.VarChar(3)
+  PaymentTransID       String?                  @db.VarChar(255)
+  BankCode             String?                  @db.VarChar(255)
+  BankTransID          String?                  @db.VarChar(255)
+  Info                 String?                  @db.Text
+  TransDate            DateTime?                @db.DateTime(0)
+  PaymentDate          DateTime?                @db.DateTime(0)
+  Amount               BigInt?
+  UserId               Int?
   registration_id      Int?
-  amount               Decimal                  @db.Decimal(10, 2)
-  payment_date         DateTime                 @db.Date
-  note                 String?                  @db.Text
   transaction_type     payment_transaction_type @default(debit)
   payment_method       String?                  @db.VarChar(50)
   payment_status       payment_payment_status   @default(pending)
-  currency             String?                  @default("VND") @db.VarChar(3)
+  currencyCode         String?                  @default("VND") @db.VarChar(3)
   payment_processor    String?                  @db.VarChar(50)
-  user_id              Int?
   receipt_number       String?                  @db.VarChar(255)
   payer_details        String?                  @db.Text
-  users                users?                   @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_payment_user")
-  course_registrations course_registrations?    @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "payment_ibfk_1")
+  users                users?                   @relation(fields: [UserId], references: [user_id], onUpdate: NoAction, map: "payment_ibfk_1")
+  course_registrations course_registrations?    @relation(fields: [registration_id], references: [registration_id], onDelete: Cascade, onUpdate: NoAction, map: "payment_ibfk_2")
 
   @@index([registration_id], map: "registration_id")
-  @@index([user_id], map: "fk_payment_user")
+  @@index([UserId], map: "UserId")
 }
 
 model subjects {
@@ -109,11 +120,25 @@ model users {
   birth_date           DateTime?              @db.Date
   address              String?                @db.Text
   picture              String?                @db.VarChar(255)
+  cart                 cart[]
   classes              classes[]
   course_registrations course_registrations[]
   parent_student       parent_student[]
   parents              parents[]
   payment              payment[]
+}
+
+model cart {
+  cart_id    Int      @id @default(autoincrement())
+  user_id    Int?
+  class_id   Int?
+  quantity   Int      @default(1)
+  added_date DateTime @default(now()) @db.DateTime(0)
+  users      users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "cart_ibfk_1")
+  classes    classes? @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: NoAction, map: "cart_ibfk_2")
+
+  @@index([class_id], map: "class_id")
+  @@index([user_id], map: "user_id")
 }
 
 enum users_role {

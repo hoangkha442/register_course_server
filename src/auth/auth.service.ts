@@ -14,14 +14,13 @@ export class AuthService {
     ){}
 
     async login(bodyLogin: bodyLogin) { 
-        const getUser = await this.prisma.users.findUnique({
-          where: { email: bodyLogin.email }
+        const getUser = await this.prisma.users.findUnique({ // tìm 1 user trong database
+          where: { email: bodyLogin.email } // mà email của user đó trùng với email của người dùng nhập vào
         });
-        if (!getUser) {
-          throw new HttpException('Sai Email!', HttpStatus.BAD_REQUEST);
+        if (!getUser) { // nếu email người dùng nhập vào không trùng với 1 trong những email có trong database
+          throw new HttpException('Sai Email!', HttpStatus.BAD_REQUEST); // thì báo sai email
         }
-        console.log('bodyLogin.password, getUser.password: ', bodyLogin.password, getUser.password);
-        const isPasswordMatching = await bcrypt.compare(bodyLogin.password, getUser.password);
+        const isPasswordMatching = await bcrypt.compare(bodyLogin.password, getUser.password);  // 123 => ạhdhqweqwkeqwjelqwjk
         if (!isPasswordMatching) {
           throw new HttpException("Sai mật khẩu!", HttpStatus.BAD_REQUEST);
         }
@@ -43,9 +42,7 @@ export class AuthService {
         if(!checkEmail){
             let newPassword =  await bcrypt.hash(bodySignup.password, 10);
             const newUser = await this.prisma.users.create({
-                data: {
-                    ...bodySignup,
-                    role: "hocVien",
+                data: { ...bodySignup, role: "hocVien",
                     password: newPassword
                 }
             })

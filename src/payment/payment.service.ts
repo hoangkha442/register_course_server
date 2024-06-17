@@ -18,7 +18,7 @@ export class PaymentService {
         where: { payment_id: paymentId },
       });
 
-      if (!payment || (payment.registration_id !== userId && user.role !== 'quanTriVien')) {
+      if (!payment || (payment.UserId !== userId && user.role !== 'quanTriVien')) {
         throw new HttpException("Access Denied", HttpStatus.FORBIDDEN);
       }
     } else if (!user || user.role !== 'quanTriVien') {
@@ -27,9 +27,13 @@ export class PaymentService {
   }
 
   async create(dto: CreatePaymentDto, userId: number) {
-    await this.checkAdminOrOwnerRole(userId);
+    console.log('dto: ', dto);
     return await this.prisma.payment.create({
-      data: dto,
+      data: {
+        ...dto,
+        UserId: userId,
+      },
+      
     });
   }
 
@@ -37,7 +41,7 @@ export class PaymentService {
     return await this.prisma.payment.findMany({
       include: {
         course_registrations: true,
-      }
+      },
     });
   }
 
@@ -46,7 +50,7 @@ export class PaymentService {
       where: { payment_id: id },
       include: {
         course_registrations: true,
-      }
+      },
     });
     if (!payment) {
       throw new HttpException('Payment record not found', HttpStatus.NOT_FOUND);

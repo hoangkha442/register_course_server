@@ -22,19 +22,46 @@ export class UserService {
 
 
 //   // PHÂN TRANG
-  async pagination(page: number, pageSize: number, userId: number): Promise<{ data: users[], totalPage: number }> {
+  // async pagination(page: number, pageSize: number, userId: number): Promise<{ data: users[], totalPage: number }> {
 
+  //   await this.checkAdminRole(userId);
+  //   const skipCount = (page - 1) * pageSize;
+  //   const users = await this.prisma.users.findMany({
+  //     skip: skipCount,
+  //     take: pageSize
+  //   });
+
+  //   const totalUsers = await this.prisma.users.count();
+  //   const totalPage = Math.ceil(totalUsers / pageSize);
+
+  //   return { data: users, totalPage };
+  // }
+
+  async pagination(page: number, pageSize: number, userId: number, name?: string, role?: string): Promise<{ data: users[], totalPage: number }> {
     await this.checkAdminRole(userId);
-    const skipCount = (page - 1) * pageSize;
-    const users = await this.prisma.users.findMany({
-      skip: skipCount,
-      take: pageSize
-    });
 
-    const totalUsers = await this.prisma.users.count();
-    const totalPage = Math.ceil(totalUsers / pageSize);
+  const skipCount = (page - 1) * pageSize;
+  const whereClause: any = {};
+  if (name) {
+    whereClause.full_name = { contains: name};
+  }
+  if (role) {
+    whereClause.role = { equals: role };
+  }
 
-    return { data: users, totalPage };
+  const users = await this.prisma.users.findMany({
+    where: whereClause,
+    skip: skipCount,
+    take: pageSize,
+    orderBy: {
+      full_name: 'asc'
+    }
+  });
+
+  const totalUsers = await this.prisma.users.count({ where: whereClause });
+  const totalPage = Math.ceil(totalUsers / pageSize);
+
+  return { data: users, totalPage };
   }
   
 
